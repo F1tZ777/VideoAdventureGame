@@ -7,7 +7,9 @@ using UnityEngine.Video;
 public class Video
 {
     [SerializeField] public VideoClip clip;
-    [SerializeField] public bool choice;
+    [SerializeField] public bool choicesAppear;
+    [SerializeField] public bool timerAppear;
+    [SerializeField] public GameObject buttonSet;
     [SerializeField] public bool autoContinue;
     [SerializeField] public int autoContinueClipID;
 }
@@ -31,11 +33,22 @@ public class VideoHandler : MonoBehaviour
 
     public void SendVideoToManager(int id)
     {
-        if (videos[id].autoContinue)
-            VideoManager.GetInstance().LoadVideo(videos[id].clip, false, videos[id].autoContinueClipID);
-        else if (videos[id].choice)
-            VideoManager.GetInstance().LoadVideo(videos[id].clip, true);
+        if (videos[id].choicesAppear)
+        {
+            if (videos[id].timerAppear)
+                // If the clip stops at the last frame for the player to make a choice
+                // AND
+                // a timer exists to start the timer and count down to 0
+                VideoManager.GetInstance().LoadVideo(videos[id].clip, true, false, 0, videos[id].buttonSet, true);
+            else
+                // If the clip stops at the last frame for the player to make a choice without timer
+                VideoManager.GetInstance().LoadVideo(videos[id].clip, true, false, 0, videos[id].buttonSet);
+        }
+        else if (videos[id].autoContinue)
+            // If the clip continues to the next automatically after this ends
+            VideoManager.GetInstance().LoadVideo(videos[id].clip, false, true, videos[id].autoContinueClipID);
         else
+            // If the clip ends and there is no clip afterwards (basically the very last video of the chapter)
             VideoManager.GetInstance().LoadVideo(videos[id].clip);
     }
 }
