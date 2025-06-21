@@ -633,7 +633,7 @@ MonoBehaviour:
   videos:
   - clip: {fileID: 32900000, guid: b6c9a8270ecc270498eafa3d33c604ff, type: 3}
     choicesAppear: 0
-    buttonSet: {fileID: 0}
+    buttonSet: []
     timerAppear: 0
     timer: {fileID: 0}
     timerTime: 0
@@ -642,16 +642,36 @@ MonoBehaviour:
     autoContinueClipID: 1
   - clip: {fileID: 32900000, guid: b6c9a8270ecc270498eafa3d33c604ff, type: 3}
     choicesAppear: 1
-    buttonSet: {fileID: 219619765}
+    buttonSet:
+    - buttons: {fileID: 7947429569077813529, guid: 2f6a737fe82fe694c86547b7180ea1fc, type: 3}
+      onClickClipID: 2
+      buttonsTransform: {x: 0, y: 0}
+      buttonsText: Click Me!
+    - buttons: {fileID: 7947429569077813529, guid: 2f6a737fe82fe694c86547b7180ea1fc, type: 3}
+      onClickClipID: 1
+      buttonsTransform: {x: 300, y: -250}
+      buttonsText: Don't click me!
+    - buttons: {fileID: 7947429569077813529, guid: 2f6a737fe82fe694c86547b7180ea1fc, type: 3}
+      onClickClipID: 1
+      buttonsTransform: {x: -400, y: -150}
+      buttonsText: Not me!
+    - buttons: {fileID: 7947429569077813529, guid: 2f6a737fe82fe694c86547b7180ea1fc, type: 3}
+      onClickClipID: 1
+      buttonsTransform: {x: 350, y: 100}
+      buttonsText: Don't even think about it!
+    - buttons: {fileID: 7947429569077813529, guid: 2f6a737fe82fe694c86547b7180ea1fc, type: 3}
+      onClickClipID: 1
+      buttonsTransform: {x: -300, y: 300}
+      buttonsText: Nuh uh
     timerAppear: 1
-    timer: {fileID: 2093791719}
+    timer: {fileID: 3963948022828307102, guid: fceebbff09921914caaf414e3f54e6c8, type: 3}
     timerTime: 5
     timerFailClipID: 1
     autoContinue: 0
     autoContinueClipID: 0
   - clip: {fileID: 32900000, guid: b6c9a8270ecc270498eafa3d33c604ff, type: 3}
     choicesAppear: 0
-    buttonSet: {fileID: 0}
+    buttonSet: []
     timerAppear: 0
     timer: {fileID: 0}
     timerTime: 0
@@ -1573,11 +1593,6 @@ PrefabInstance:
 --- !u!224 &2093791718 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7242036931155580656, guid: fceebbff09921914caaf414e3f54e6c8, type: 3}
-  m_PrefabInstance: {fileID: 2093791717}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &2093791719 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3963948022828307102, guid: fceebbff09921914caaf414e3f54e6c8, type: 3}
   m_PrefabInstance: {fileID: 2093791717}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &2142229475

@@ -2,8 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using UnityEngine.Video;
+using TMPro;
+using UnityEngine.UI;
+using Unity.VisualScripting;
+using UnityEngine.UIElements;
 
 public class VideoManager : MonoBehaviour
 {
@@ -12,8 +15,10 @@ public class VideoManager : MonoBehaviour
     VideoHandler handler;
     bool choice = false, autoContinue = false;
     int continueClipID, timerClipID, timerDuration;
-    GameObject buttonSetActive;
-    GameObject timerSetActive;
+    List<ButtonSet> buttonSetActive;
+    GameObject timerSetActive, timerCached;
+    Transform canvasTransform;
+    List<GameObject> buttonsCached = new List<GameObject>();
     
     void Awake()
     {
@@ -29,7 +34,7 @@ public class VideoManager : MonoBehaviour
     void Start()
     {
         player.loopPointReached += EndReached;
-        FetchHandler();
+        FetchImportantStuff();
     }
 
     // Update is called once per frame
@@ -51,7 +56,7 @@ public class VideoManager : MonoBehaviour
         continueClipID = continueID;
     }
 
-    public void LoadVideo(VideoClip clip, GameObject buttonSet)
+    public void LoadVideo(VideoClip clip, List<ButtonSet> buttonSet)
     {
         SetClip(clip);
 
@@ -59,7 +64,7 @@ public class VideoManager : MonoBehaviour
         buttonSetActive = buttonSet;
     }
 
-    public void LoadVideo(VideoClip clip, GameObject buttonSet, GameObject timer, int timerID, int time)
+    public void LoadVideo(VideoClip clip, List<ButtonSet> buttonSet, GameObject timer, int timerID, int time)
     {
         SetClip(clip);
 
@@ -71,53 +76,8 @@ public class VideoManager : MonoBehaviour
 
         timerSetActive.SetActive(true);
 
-        StateMachineManager.GetInstance().SetSlider(timerSetActive, timerDuration);
+        //StateMachineManager.GetInstance().SetSlider(timerSetActive, timerDuration);
     }
-
-    //public void LoadVideo(VideoClip clip, bool choicesAppear = false, bool autoContinueBool = false, int continueID = 0, GameObject buttonSet = null, bool timerAppear = false)
-    //{
-    //    // Reset all data
-    //    choice = false;
-    //    timer = false;
-    //    timerStart = false;
-    //    buttonSetActive = null;
-    //    autoContinue = false;
-    //    continueClipID = 0;
-
-    //    player.clip = clip;
-    //    PlayVideo();
-
-    //    /* Choices Appear Notes:
-    //     * - If choices appear, have the video pause at the very last frame and enable buttonSet game object
-    //     * - If timerAppear = true, the timer will count down (slider goes from 1 to 0 using deltaTime)
-    //     * - In the buttons' OnClick() method, declare the clipID that will be shown if the specified button
-    //     * is click
-    //     * - In other words, technically, there is no need for ButtonHandler cuz everything is being handled
-    //     * by VideoManager :wilted_rose:
-    //     */
-    //    if (choicesAppear)
-    //    {
-    //        choice = true;
-    //        buttonSetActive = buttonSet;
-
-    //        if (timerAppear)
-    //        {
-    //            timer = true;
-    //        }
-    //    }
-
-    //    /* As for autoContinue:
-    //     * - If autoContinue is true, play the video as normal to the end
-    //     * - Once the video is finished (figure out how to find that out), use the autoContinueClipID that
-    //     * was passed from VideoHandler and pass it back to VideoHandler using the SendVideoToManager() method
-    //     * in order to get the rest of the data within that ClipID
-    //     */
-    //    if (autoContinueBool)
-    //    {
-    //        autoContinue = true;
-    //        continueClipID = continueID;
-    //    }
-    //}
 
     public void SetClip(VideoClip clip)
     {
@@ -164,11 +124,30 @@ public class VideoManager : MonoBehaviour
         {
             //StateMachineManager.GetInstance().EnterFinishedState();
             StateMachineManager.GetInstance().SwitchState(StateMachineManager.GetInstance().FinishedState);
-            buttonSetActive.SetActive(true);
+            //buttonSetActive.SetActive(true);
+            foreach (var button in buttonSetActive)
+            {
+                GameObject spawnButton = Instantiate(button.buttons, canvasTransform);
+                spawnButton.SetActive(true);
+
+                SetPosInCanvas(spawnButton, button.buttonsTransform);
+
+                // Button On Click initialize here
+                UnityEngine.UI.Button buttonComp = spawnButton.GetComponent<UnityEngine.UI.Button>();
+                buttonComp.onClick.AddListener(() => PlayOnClick(button.onClickClipID));
+
+                TMP_Text buttonText = spawnButton.GetComponentInChildren<TMP_Text>();
+                buttonText.text = button.buttonsText;
+
+                // Add spawnButton into the list of game objects
+                buttonsCached.Add(spawnButton);
+            }
 
             if (timerSetActive)
             {
-                timerSetActive.SetActive(true);
+                timerCached = Instantiate(timerSetActive, canvasTransform);
+                timerCached.SetActive(true);
+                StateMachineManager.GetInstance().SetSlider(timerCached, timerDuration);
             }
 
             return;
@@ -184,17 +163,47 @@ public class VideoManager : MonoBehaviour
         StateMachineManager.GetInstance().SwitchState(StateMachineManager.GetInstance().IdleState);
     }
 
+    public void PlayOnClick(int id)
+    {
+        handler.SendVideoToManager(id);
+        DestroyOverlay();
+    }
+
     public void TimerFailSendClip()
     {
         handler.SendVideoToManager(timerClipID);
-        buttonSetActive.SetActive(false);
-        timerSetActive.SetActive(false);
-        timerSetActive.GetComponent<Slider>().value = 1;
+        DestroyOverlay();
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        FetchHandler();
+        FetchImportantStuff();
+    }
+
+    void SetPosInCanvas(GameObject obj, Vector2 pos)
+    {
+        RectTransform rect = obj.GetComponent<RectTransform>();
+
+        // Reset scale and rotation to prevent odd layout behavior
+        rect.localScale = Vector3.one;
+        rect.localRotation = Quaternion.identity;
+
+        // Set pivot or anchors if needed (optional)
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+
+        // Set the anchored position (relative to the anchor)
+        rect.anchoredPosition = pos;
+    }
+
+    void DestroyOverlay()
+    {
+        if (timerCached)
+            Destroy(timerCached);
+        foreach (var button in buttonsCached)
+        {
+            Destroy(button);
+        }
     }
 
     void FetchHandler()
@@ -202,6 +211,19 @@ public class VideoManager : MonoBehaviour
         handler = FindAnyObjectByType<VideoHandler>();
         if (!handler)
             Debug.LogError("No video handler initialized!");
+    }
+
+    void FetchCanvas()
+    {
+        canvasTransform = FindObjectOfType<Canvas>().gameObject.transform;
+        if (!canvasTransform)
+            Debug.LogError("Unable to find canvas for some reason");
+    }
+
+    void FetchImportantStuff()
+    {
+        FetchHandler();
+        FetchCanvas();
     }
 
     public static VideoManager GetInstance() => instance;
