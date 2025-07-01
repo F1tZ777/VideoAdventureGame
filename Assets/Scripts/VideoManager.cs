@@ -25,7 +25,6 @@ public class VideoManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
         player = this.GetComponent<VideoPlayer>();
@@ -74,8 +73,6 @@ public class VideoManager : MonoBehaviour
         timerClipID = timerID;
         timerDuration = time;
 
-        timerSetActive.SetActive(true);
-
         //StateMachineManager.GetInstance().SetSlider(timerSetActive, timerDuration);
     }
 
@@ -122,6 +119,7 @@ public class VideoManager : MonoBehaviour
     {
         if (choice)
         {
+            buttonsCached.Clear();
             //StateMachineManager.GetInstance().EnterFinishedState();
             StateMachineManager.GetInstance().SwitchState(StateMachineManager.GetInstance().FinishedState);
             //buttonSetActive.SetActive(true);
@@ -145,9 +143,12 @@ public class VideoManager : MonoBehaviour
 
             if (timerSetActive)
             {
+                timerCached = null;
                 timerCached = Instantiate(timerSetActive, canvasTransform);
                 timerCached.SetActive(true);
                 StateMachineManager.GetInstance().SetSlider(timerCached, timerDuration);
+                if (timerCached != null)
+                    Debug.Log("Timer has been created");
             }
 
             return;
@@ -165,14 +166,14 @@ public class VideoManager : MonoBehaviour
 
     public void PlayOnClick(int id)
     {
-        handler.SendVideoToManager(id);
         DestroyOverlay();
+        handler.SendVideoToManager(id);
     }
 
     public void TimerFailSendClip()
     {
-        handler.SendVideoToManager(timerClipID);
         DestroyOverlay();
+        handler.SendVideoToManager(timerClipID);
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -199,7 +200,10 @@ public class VideoManager : MonoBehaviour
     void DestroyOverlay()
     {
         if (timerCached)
+        {
             Destroy(timerCached);
+            Debug.Log("Timer has been destroyed");
+        }
         foreach (var button in buttonsCached)
         {
             Destroy(button);
@@ -227,4 +231,10 @@ public class VideoManager : MonoBehaviour
     }
 
     public static VideoManager GetInstance() => instance;
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        player.loopPointReached -= EndReached;
+    }
 }

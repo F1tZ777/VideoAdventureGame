@@ -24,7 +24,6 @@ public class GameManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
     }
@@ -89,4 +88,9 @@ public class GameManager : MonoBehaviour
     }
 
     public static GameManager GetInstance() => Instance;
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
 }

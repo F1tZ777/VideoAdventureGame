@@ -2,8 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
+using UnityEngine.UI;
 using TMPro;
 using Sirenix.OdinInspector;
+using UnityEditor;
 
 [System.Serializable]
 public class ButtonSet
@@ -20,6 +22,9 @@ public class ButtonSet
 [FoldoutGroup("Video Entry", expanded: true)]
 public class Video
 {
+    [HideInInspector]
+    public VideoHandler parentHandler;
+
     [FoldoutGroup("Video Entry")]
     [PreviewField(70), HideLabel]
     public VideoClip clip;
@@ -30,7 +35,8 @@ public class Video
 
     [FoldoutGroup("Video Entry")]
     [ShowIf("@choicesAppear")]
-    public List<ButtonSet> buttonSet;
+    public List<ButtonSet> buttonSet = new();
+    //public SceneConfigScript buttonSet;
 
     [FoldoutGroup("Video Entry")]
     [ShowIf(nameof(choicesAppear))]
@@ -56,12 +62,78 @@ public class Video
     [FoldoutGroup("Video Entry")]
     [ShowIf(nameof(autoContinue))]
     public int autoContinueClipID;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Video Entry")]
+    [Button("Populate Buttons", ButtonSizes.Large)]
+    [ShowIf(nameof(choicesAppear))]
+    private void PopulateButtons()
+    {
+
+        if (parentHandler == null)
+        {
+            Debug.LogError("Parent VideoHandler not set. Populate will not work.");
+            return;
+        }
+
+        Button[] foundButtons = parentHandler.GetComponentsInChildren<Button>(true);
+        if (foundButtons.Length == 0)
+        {
+            Debug.LogWarning("No buttons found under VideoHandler.");
+            return;
+        }
+
+        buttonSet.Clear();
+
+        foreach (Button button in foundButtons)
+        {
+            GameObject btnGo = button.gameObject;
+
+            Vector2 anchoredPos = Vector2.zero;
+            RectTransform rect = btnGo.GetComponent<RectTransform>();
+            if (rect != null)
+                anchoredPos = rect.anchoredPosition;
+
+            string buttonText = "";
+            TMP_Text textComp = btnGo.GetComponentInChildren<TMP_Text>();
+            if (textComp != null)
+                buttonText = textComp.text;
+
+            GameObject prefabAsset = null;
+
+#if UNITY_EDITOR
+            prefabAsset = (GameObject)PrefabUtility.GetCorrespondingObjectFromSource(btnGo);
+#endif
+
+            buttonSet.Add(new ButtonSet
+            {
+                buttons = prefabAsset != null ? prefabAsset : btnGo,
+                buttonsTransform = anchoredPos,
+                buttonsText = buttonText,
+                onClickClipID = 0
+            });
+        }
+
+        Debug.Log($"Populated {buttonSet.Count} buttons for video: {clip?.name}");
+    }
+#endif
 }
 
 public class VideoHandler : MonoBehaviour
 {
     [Header("Video List")]
     [SerializeField] public List<Video> videos;
+
+    #if UNITY_EDITOR
+    private void OnValidate()
+    {
+        foreach (var video in videos)
+        {
+            if (video != null)
+                video.parentHandler = this;
+        }
+    }
+#endif
 
     public void SendVideoToManager(int id)
     {
