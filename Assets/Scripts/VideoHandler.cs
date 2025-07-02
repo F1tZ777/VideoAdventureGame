@@ -127,11 +127,29 @@ public class VideoHandler : MonoBehaviour
     #if UNITY_EDITOR
     private void OnValidate()
     {
+        if (videos == null)
+            return;
         foreach (var video in videos)
         {
             if (video != null)
                 video.parentHandler = this;
         }
+    }
+
+    [Button("Import From CSV", ButtonSizes.Large)]
+    [ButtonGroup("ImportExport")]
+    private void ImportCSV()
+    {
+        string path = "Assets/Resources/videoData.csv";
+        videos = CSVHandler.ImportCSV(path);
+    }
+
+    [Button("Export To CSV", ButtonSizes.Large)]
+    [ButtonGroup("ImportExport")]
+    private void ExportCSV()
+    {
+        string path = "Assets/Resources/videoData.csv";
+        CSVHandler.ExportToCSV(videos, path);
     }
 #endif
 

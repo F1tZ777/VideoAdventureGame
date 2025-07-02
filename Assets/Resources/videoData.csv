@@ -1,0 +1,5 @@
+VideoClipID,VideoClipName,ChoicesAppear,ButtonSetObject,ButtonSetName,ButtonPosX,ButtonPosY,OnClickClipID,TimerAppear,TimerObject,TimerDuration,TimerFailClipID,AutoContinue,AutoContinueClipID
+0,VideoClips/walking_fish,False,null,,0,0,0,False,null,0,0,True,1
+1,VideoClips/walking_fish,True,Prefabs/BaseRectangularButton,Click Here!,-499,0,2,True,Prefabs/Timer,5,1,False,0
+1,VideoClips/walking_fish,True,Prefabs/BaseRectangularButton,No,505,0,1,True,Prefabs/Timer,5,1,False,0
+2,VideoClips/walking_fish,False,null,,0,0,0,False,null,0,0,False,0
